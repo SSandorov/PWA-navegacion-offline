@@ -6,7 +6,7 @@ Cache with network fallback
 
 // Empleamos las variables y la función para gestionar la memoria y la instalación del SW
 
-const CACHE_STATIC_NAME  = 'static-v2';
+const CACHE_STATIC_NAME  = 'static-v3';
 const CACHE_DYNAMIC_NAME = 'dynamic-v1';
 const CACHE_INMUTABLE_NAME = 'inmutable-v1';
 
@@ -52,6 +52,26 @@ self.addEventListener('install', e => {
     e.waitUntil( Promise.all([cacheProm, cacheInmutable]) );
 
 });
+
+// Para limpiar de la memoria los cachés viejos, lo hacemos justo después de la instalación
+// de un nuevo caché
+// sólo eliminamos el caché estático, ya que el inmutable siempre se queda como está
+// y el dinámico está limitado a 50 elementos
+self.addEventListener('activate', e => {
+    // devuelve el nombre de las variables que gestionan la memoria
+    const respuesta = caches.keys()
+        .then(keys => {
+            // itera entre todos los elementos de la caché
+            keys.forEach(key => {
+                // si la versión es distinta a la actual, elimínala
+                if ( key !== CACHE_STATIC_NAME && key.includes('static')) {
+                    return caches.delete(key);
+                }
+            });
+        });
+
+    e.waitUntil(respuesta);
+})
 
 self.addEventListener('fetch', e => {
     const respuesta = caches.match( e.request )
