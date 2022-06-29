@@ -6,7 +6,7 @@ Cache with network fallback
 
 // Empleamos las variables y la función para gestionar la memoria y la instalación del SW
 
-const CACHE_STATIC_NAME  = 'static-v1';
+const CACHE_STATIC_NAME  = 'static-v2';
 const CACHE_DYNAMIC_NAME = 'dynamic-v1';
 const CACHE_INMUTABLE_NAME = 'inmutable-v1';
 
@@ -70,6 +70,15 @@ self.addEventListener('fetch', e => {
                     });
 
                 return newResp.clone();
+            })
+            // Vamos a manejar la excepción de que no se pueda recuperar un archivo
+            // del caché cuando estamos desconectados
+            .catch(err => {
+                // si no podemos devolver una página, devolvemos una página de offline
+                // con los headers podemos detectar qué tipo de archivo es
+                if ( e.request.headers.get('accept').includes('text/html') ) {
+                    return caches.match('/pages/offline.html');
+                }
             });
 
 
@@ -80,4 +89,4 @@ self.addEventListener('fetch', e => {
 
     e.respondWith( respuesta );
 
-})
+});
